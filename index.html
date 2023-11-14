@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #messages {
+            list-style-type: none;
+            padding: 0;
+            overflow-y: scroll;
+            height: 300px;
+            width: 80%;
+            border: 1px solid #555;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        .message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .user-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #555;
+            margin-right: 10px;
+        }
+
+        .message-text {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #00ff00; /* Neon green color */
+            border: none;
+            border-radius: 5px;
+            color: #111; /* Dark text color for contrast */
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #aaa;
+            margin-left: 10px;
+        }
+
+        form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #555;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+        <input id="m" autocomplete="off" placeholder="Type your message" />
+        <button>Send</button>
+    </form>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        $(function () {
+            const socket = io();
+
+            // Handle form submission
+            $('form').submit(function () {
+                const message = $('#m').val();
+                socket.emit('chat message', { text: message, user: 'User', timestamp: getCurrentTime() });
+                $('#m').val('');
+                return false;
+            });
+
+            // Handle incoming chat messages
+            socket.on('chat message', function (msg) {
+                displayMessage(msg);
+            });
+
+            function displayMessage(msg) {
+                const { text, user, timestamp } = msg;
+                const messageContainer = $('<li class="message">');
+                const userIcon = $('<div class="user-icon"></div>');
+                const messageText = $('<div class="message-text"></div>').text(text);
+                const timestampElement = $('<div class="timestamp"></div>').text(timestamp);
+
+                userIcon.text(user.charAt(0));
+                messageContainer.append(userIcon, messageText, timestampElement);
+                $('#messages').append(messageContainer);
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            }
+
+            function getCurrentTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+        });
+    </script>
+</body>
+</html>
